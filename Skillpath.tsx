@@ -4,7 +4,7 @@
  * This file is deliberately thin: it reads the property controls, calls the
  * hooks and hands everything to the presentational pieces in Ui.tsx. Fetching
  * lives in Api.tsx, formatting in Format.tsx, tokens and colour maths in
- * Theme.tsx. If you are looking for logic, it is not in here.
+ * Tokens.tsx. If you are looking for logic, it is not in here.
  *
  * Plain JavaScript + JSX. The .tsx extension is Framer's requirement for code
  * files — relative imports must carry it — not a TypeScript signal.
@@ -13,7 +13,7 @@
 import { addPropertyControls, ControlType } from "framer"
 import { useMemo, useRef, useState } from "react"
 
-import { ACCENT, contrastText, theme, tint, visuallyHidden } from "./Theme.tsx"
+import { ACCENT, contrastText, theme, tint, visuallyHidden } from "./Tokens.tsx"
 import { selectCourses } from "./Format.tsx"
 import { useColumns, useCourses } from "./Hooks.tsx"
 import {
