@@ -101,7 +101,7 @@ function luminance(color) {
 }
 
 /** Contrast ratio between two colours, 1 (identical) to 21 (black on white). */
-export function contrastRatio(a, b) {
+function contrastRatio(a, b) {
     const light = Math.max(luminance(a), luminance(b))
     const dark = Math.min(luminance(a), luminance(b))
     return (light + 0.05) / (dark + 0.05)
@@ -118,6 +118,19 @@ export function contrastText(color) {
         ? theme.ink
         : "#FFFFFF"
 }
+
+/* ------------------------------ colour channels ---------------------------- */
+
+/**
+ * Body and secondary text are per-instance: each section writes --sp-text and
+ * --sp-muted onto its own root, and everything below reads them through these.
+ * Prop-drilling two colours through every presentational component would touch
+ * a dozen signatures to say the same thing twice.
+ *
+ * The fallback after the comma is what renders if a root forgets to set them.
+ */
+export const TEXT_VAR = "var(--sp-text, #F3F5F9)"
+export const MUTED_VAR = "var(--sp-muted, #98A1B2)"
 
 /* ------------------------------- accessibility ------------------------------ */
 

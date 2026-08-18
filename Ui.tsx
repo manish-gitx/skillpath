@@ -2,11 +2,16 @@
  * Ui — presentational building blocks. Every one of these takes data and
  * renders; none of them fetch, measure or own state. That split is what makes
  * the section easy to restyle without touching the data code.
+ *
+ * Text colours arrive as CSS custom properties from the section root rather
+ * than as props — see TEXT_VAR / MUTED_VAR in Tokens.tsx.
  */
 
 import {
+    ACCENT,
     GLOBAL_CSS,
-    contrastRatio,
+    MUTED_VAR,
+    TEXT_VAR,
     contrastText,
     theme,
     tint,
@@ -27,11 +32,7 @@ function Chip({ label, color }) {
                 fontSize: 12,
                 fontWeight: 500,
                 lineHeight: 1.4,
-                // A dark accent can't legibly be its own label on this
-                // surface; fall back to body text rather than print it
-                // unreadable. 4.5:1 is the WCAG minimum for small text.
-                color:
-                    contrastRatio(color, theme.surface) >= 4.5 ? color : theme.text,
+                color,
                 background: tint(color, 0.12),
                 border: `1px solid ${tint(color, 0.28)}`,
                 borderRadius: 999,
@@ -44,7 +45,7 @@ function Chip({ label, color }) {
     )
 }
 
-function PrimaryButton({ accentColor, onClick, children }) {
+function PrimaryButton({ onClick, children }) {
     return (
         <button
             type="button"
@@ -55,10 +56,10 @@ function PrimaryButton({ accentColor, onClick, children }) {
                 padding: "10px 20px",
                 borderRadius: 10,
                 border: "none",
-                background: accentColor,
-                // Ink on a bright accent, white on a dark one — measured,
-                // not guessed at with a luminance cutoff.
-                color: contrastText(accentColor),
+                background: ACCENT,
+                // Ink on a bright accent, white on a dark one — measured, so
+                // changing ACCENT in Tokens.tsx can't leave an unreadable label.
+                color: contrastText(ACCENT),
                 fontSize: 14,
                 fontWeight: 600,
                 fontFamily: "inherit",
@@ -77,7 +78,7 @@ const fieldStyle = {
     borderRadius: 10,
     border: `1px solid ${theme.border}`,
     background: theme.surface,
-    color: theme.text,
+    color: TEXT_VAR,
     fontSize: 14,
     fontFamily: "inherit",
 }
@@ -113,7 +114,7 @@ export function Toolbar({ query, onQuery, sortOrder, onSort, disabled }) {
 
 /* ----------------------------------- card ---------------------------------- */
 
-function CourseCard({ course, country, accentColor, priceReady, card }) {
+function CourseCard({ course, country, priceReady, card }) {
     return (
         <article
             className="sp-card"
@@ -144,7 +145,7 @@ function CourseCard({ course, country, accentColor, priceReady, card }) {
                 {/* The extra field the brief asks for. Category is the one a
                     learner actually scans for; courseCode and mangoId are
                     internal identifiers and deliberately absent. */}
-                <Chip label={course.mainCategory || "Course"} color={accentColor} />
+                <Chip label={course.mainCategory || "Course"} color={ACCENT} />
                 {course.refundable === true && (
                     <Chip label="Refundable" color={theme.positive} />
                 )}
@@ -156,7 +157,7 @@ function CourseCard({ course, country, accentColor, priceReady, card }) {
                     fontSize: 18,
                     lineHeight: 1.3,
                     fontWeight: 600,
-                    color: theme.text,
+                    color: TEXT_VAR,
                 }}
             >
                 {course.courseName}
@@ -167,7 +168,7 @@ function CourseCard({ course, country, accentColor, priceReady, card }) {
                     margin: 0,
                     fontSize: 14,
                     lineHeight: 1.55,
-                    color: theme.muted,
+                    color: MUTED_VAR,
                     // Two lines, cut with an ellipsis rather than a hard crop.
                     display: "-webkit-box",
                     WebkitBoxOrient: "vertical",
@@ -193,7 +194,7 @@ function CourseCard({ course, country, accentColor, priceReady, card }) {
                     to swap a moment later. */}
                 {priceReady ? (
                     <span
-                        style={{ fontSize: 20, fontWeight: 600, color: theme.text }}
+                        style={{ fontSize: 20, fontWeight: 600, color: TEXT_VAR }}
                     >
                         {formatPrice(course, country)}
                     </span>
@@ -204,21 +205,13 @@ function CourseCard({ course, country, accentColor, priceReady, card }) {
                         style={{ display: "inline-block", width: "5ch", height: 20 }}
                     />
                 )}
-                <span style={{ fontSize: 12, color: theme.muted }}>one-time</span>
+                <span style={{ fontSize: 12, color: MUTED_VAR }}>one-time</span>
             </div>
         </article>
     )
 }
 
-export function CourseGrid({
-    courses,
-    columns,
-    gap,
-    country,
-    accentColor,
-    priceReady,
-    card,
-}) {
+export function CourseGrid({ courses, columns, gap, country, priceReady, card }) {
     return (
         <div
             style={{
@@ -234,7 +227,6 @@ export function CourseGrid({
                     key={course.courseCode || course.mangoId || index}
                     course={course}
                     country={country}
-                    accentColor={accentColor}
                     priceReady={priceReady}
                     card={card}
                 />
@@ -302,7 +294,7 @@ function StateBox({ children }) {
                 borderRadius: 16,
                 background: theme.surface,
                 border: `1px dashed ${theme.borderStrong}`,
-                color: theme.text,
+                color: TEXT_VAR,
             }}
         >
             {children}
@@ -310,21 +302,19 @@ function StateBox({ children }) {
     )
 }
 
-export function ErrorState({ detail, accentColor, onRetry }) {
+export function ErrorState({ detail, onRetry }) {
     return (
         <StateBox>
             <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
                 We couldn't load the courses
             </h3>
-            <p style={{ margin: 0, fontSize: 14, color: theme.muted }}>
+            <p style={{ margin: 0, fontSize: 14, color: MUTED_VAR }}>
                 The course service didn't answer. Nothing is wrong on your end.
             </p>
-            <PrimaryButton accentColor={accentColor} onClick={onRetry}>
-                Try again
-            </PrimaryButton>
+            <PrimaryButton onClick={onRetry}>Try again</PrimaryButton>
             {/* The status code helps whoever debugs this; it is not the headline. */}
             {detail ? (
-                <span style={{ fontSize: 12, color: theme.muted, opacity: 0.7 }}>
+                <span style={{ fontSize: 12, color: MUTED_VAR, opacity: 0.7 }}>
                     {detail}
                 </span>
             ) : null}
@@ -332,7 +322,7 @@ export function ErrorState({ detail, accentColor, onRetry }) {
     )
 }
 
-export function EmptyState({ isFiltered, query, accentColor, onClear, onRetry }) {
+export function EmptyState({ isFiltered, query, onClear, onRetry }) {
     // "Your search matched nothing" and "the catalogue is empty" are different
     // problems, so they get different words and a different button. The API
     // never returns zero courses, so the filtered case is the only one a
@@ -344,15 +334,12 @@ export function EmptyState({ isFiltered, query, accentColor, onClear, onRetry })
                     ? `No courses match "${query.trim()}"`
                     : "No courses yet"}
             </h3>
-            <p style={{ margin: 0, fontSize: 14, color: theme.muted }}>
+            <p style={{ margin: 0, fontSize: 14, color: MUTED_VAR }}>
                 {isFiltered
                     ? "Try a shorter word, or clear the search to see everything."
                     : "The catalogue came back empty. Check again in a moment."}
             </p>
-            <PrimaryButton
-                accentColor={accentColor}
-                onClick={isFiltered ? onClear : onRetry}
-            >
+            <PrimaryButton onClick={isFiltered ? onClear : onRetry}>
                 {isFiltered ? "Clear search" : "Reload"}
             </PrimaryButton>
         </StateBox>

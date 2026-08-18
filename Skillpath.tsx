@@ -35,6 +35,33 @@ function clamp(value, min, max, fallback) {
     return Math.min(max, Math.max(min, number))
 }
 
+/**
+ * The two text colours every section exposes, written onto its root so the
+ * presentational components can read them without taking colour props.
+ */
+function textVars(textColor, descriptionColor) {
+    return {
+        "--sp-text": textColor || theme.text,
+        "--sp-muted": descriptionColor || theme.muted,
+    }
+}
+
+/** Shared shape for the two colour controls, so all three sections match. */
+const COLOUR_CONTROLS = {
+    textColor: {
+        type: ControlType.Color,
+        title: "Text",
+        defaultValue: theme.text,
+        description: "Headings and primary text.",
+    },
+    descriptionColor: {
+        type: ControlType.Color,
+        title: "Description",
+        defaultValue: theme.muted,
+        description: "Body copy and secondary lines.",
+    },
+}
+
 /* ----------------------------------- Hero ---------------------------------- */
 
 /**
@@ -49,7 +76,9 @@ export function Hero({
     subline = "Short, practical courses from creators who have already done it. Start today, ship something this week.",
     buttonLabel = "Browse courses",
     buttonLink = "#courses",
-    accentColor = ACCENT,
+    textColor = theme.text,
+    descriptionColor = theme.muted,
+    buttonRadius = 12,
     paddingY = 112,
     paddingX = 24,
     style,
@@ -58,10 +87,9 @@ export function Hero({
         <section
             style={{
                 ...style,
-                // Read by .sp-focusable in the shared stylesheet, so each
-                // instance gets its own accent instead of the last one
-                // rendered on the page winning.
-                "--sp-accent": accentColor,
+                ...textVars(textColor, descriptionColor),
+                // Read by .sp-focusable in the shared stylesheet.
+                "--sp-accent": ACCENT,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -70,7 +98,7 @@ export function Hero({
                 padding: `${clamp(paddingY, 0, 240, 112)}px ${clamp(paddingX, 0, 120, 24)}px`,
                 background: theme.background,
                 backgroundImage: `radial-gradient(60% 80% at 50% 0%, ${tint(
-                    accentColor,
+                    ACCENT,
                     0.22
                 )} 0%, rgba(0,0,0,0) 70%)`,
                 fontFamily: theme.font,
@@ -84,9 +112,9 @@ export function Hero({
                         fontSize: 13,
                         fontWeight: 500,
                         letterSpacing: 0.4,
-                        color: accentColor,
-                        border: `1px solid ${tint(accentColor, 0.35)}`,
-                        background: tint(accentColor, 0.1),
+                        color: ACCENT,
+                        border: `1px solid ${tint(ACCENT, 0.35)}`,
+                        background: tint(ACCENT, 0.1),
                         borderRadius: 999,
                         padding: "6px 14px",
                     }}
@@ -103,7 +131,7 @@ export function Hero({
                     lineHeight: 1.08,
                     letterSpacing: -1.2,
                     fontWeight: 600,
-                    color: theme.text,
+                    color: "var(--sp-text)",
                 }}
             >
                 {headline}
@@ -115,7 +143,7 @@ export function Hero({
                     maxWidth: 560,
                     fontSize: 17,
                     lineHeight: 1.6,
-                    color: theme.muted,
+                    color: "var(--sp-muted)",
                 }}
             >
                 {subline}
@@ -130,9 +158,9 @@ export function Hero({
                     alignItems: "center",
                     gap: 8,
                     padding: "14px 26px",
-                    borderRadius: 12,
-                    background: accentColor,
-                    color: contrastText(accentColor),
+                    borderRadius: clamp(buttonRadius, 0, 32, 12),
+                    background: ACCENT,
+                    color: contrastText(ACCENT),
                     fontSize: 15,
                     fontWeight: 600,
                     textDecoration: "none",
@@ -177,12 +205,15 @@ addPropertyControls(Hero, {
         defaultValue: "#courses",
         description: "`#courses` scrolls down to the Courses section.",
     },
-    accentColor: {
-        type: ControlType.Color,
-        title: "Accent",
-        defaultValue: ACCENT,
-        description:
-            "Button, badge and glow. Bind all three sections to one Color Style to keep them in sync.",
+    ...COLOUR_CONTROLS,
+    buttonRadius: {
+        type: ControlType.Number,
+        title: "Button radius",
+        min: 0,
+        max: 32,
+        step: 1,
+        unit: "px",
+        defaultValue: 12,
     },
     paddingY: {
         type: ControlType.Number,
@@ -207,8 +238,8 @@ addPropertyControls(Hero, {
 /* --------------------------------- Courses --------------------------------- */
 
 /**
- * The section the assignment is actually about: live data, four states,
- * 3 / 2 / 1 columns.
+ * The section the assignment is actually about: live data, four states, and a
+ * grid that measures itself.
  *
  * @framerSupportedLayoutWidth any
  * @framerSupportedLayoutHeight auto
@@ -217,12 +248,13 @@ addPropertyControls(Hero, {
  */
 export function Courses({
     sectionTitle = "Courses",
-    accentColor = ACCENT,
-    paddingY = 80,
-    paddingX = 24,
+    textColor = theme.text,
+    descriptionColor = theme.muted,
+    gap = 20,
     cardRadius = 16,
     cardPadding = 22,
-    gap = 20,
+    paddingY = 80,
+    paddingX = 24,
     style,
 }) {
     const {
@@ -239,6 +271,7 @@ export function Courses({
     const [sortOrder, setSortOrder] = useState("default") // default | asc | desc
 
     const gridRef = useRef(null)
+    // Fixed 3 / 2 / 1 — the brief specifies those counts.
     const columns = useColumns(gridRef)
 
     const visibleCourses = useMemo(
@@ -268,11 +301,12 @@ export function Courses({
             id="courses"
             style={{
                 ...style,
-                "--sp-accent": accentColor,
+                ...textVars(textColor, descriptionColor),
+                "--sp-accent": ACCENT,
                 padding: `${clamp(paddingY, 0, 240, 80)}px ${clamp(paddingX, 0, 120, 24)}px`,
                 background: theme.background,
                 fontFamily: theme.font,
-                color: theme.text,
+                color: "var(--sp-text)",
                 boxSizing: "border-box",
             }}
         >
@@ -293,6 +327,7 @@ export function Courses({
                             fontSize: "clamp(26px, 3vw, 36px)",
                             letterSpacing: -0.8,
                             fontWeight: 600,
+                            color: "var(--sp-text)",
                         }}
                     >
                         {sectionTitle}
@@ -314,7 +349,7 @@ export function Courses({
                         style={{
                             margin: "0 0 20px",
                             fontSize: 13,
-                            color: theme.muted,
+                            color: "var(--sp-muted)",
                         }}
                     >
                         We couldn't confirm your region, so prices are shown in ₹ (INR).
@@ -341,18 +376,13 @@ export function Courses({
                     ) : null}
 
                     {status === "error" ? (
-                        <ErrorState
-                            detail={errorMessage}
-                            accentColor={accentColor}
-                            onRetry={reload}
-                        />
+                        <ErrorState detail={errorMessage} onRetry={reload} />
                     ) : null}
 
                     {status === "ready" && visibleCourses.length === 0 ? (
                         <EmptyState
                             isFiltered={isFiltered}
                             query={query}
-                            accentColor={accentColor}
                             onClear={() => setQuery("")}
                             onRetry={reload}
                         />
@@ -364,7 +394,6 @@ export function Courses({
                             columns={columns}
                             gap={gridGap}
                             country={country}
-                            accentColor={accentColor}
                             priceReady={countryReady}
                             card={card}
                         />
@@ -383,30 +412,16 @@ addPropertyControls(Courses, {
         title: "Title",
         defaultValue: "Courses",
     },
-    accentColor: {
-        type: ControlType.Color,
-        title: "Accent",
-        defaultValue: ACCENT,
-        description:
-            "Category chips, retry button and focus rings. Bind all three sections to one Color Style to keep them in sync.",
-    },
-    paddingY: {
+    ...COLOUR_CONTROLS,
+    gap: {
         type: ControlType.Number,
-        title: "Padding Y",
+        title: "Grid gap",
         min: 0,
-        max: 240,
-        step: 4,
+        max: 48,
+        step: 2,
         unit: "px",
-        defaultValue: 80,
-    },
-    paddingX: {
-        type: ControlType.Number,
-        title: "Padding X",
-        min: 0,
-        max: 120,
-        step: 4,
-        unit: "px",
-        defaultValue: 24,
+        defaultValue: 20,
+        description: "Space between cards. Columns are fixed at 3 / 2 / 1.",
     },
     cardRadius: {
         type: ControlType.Number,
@@ -426,15 +441,23 @@ addPropertyControls(Courses, {
         unit: "px",
         defaultValue: 22,
     },
-    gap: {
+    paddingY: {
         type: ControlType.Number,
-        title: "Grid gap",
+        title: "Padding Y",
         min: 0,
-        max: 48,
-        step: 2,
+        max: 240,
+        step: 4,
         unit: "px",
-        defaultValue: 20,
-        description: "Space between cards. Columns stay 3 / 2 / 1 by breakpoint.",
+        defaultValue: 80,
+    },
+    paddingX: {
+        type: ControlType.Number,
+        title: "Padding X",
+        min: 0,
+        max: 120,
+        step: 4,
+        unit: "px",
+        defaultValue: 24,
     },
 })
 
@@ -455,7 +478,8 @@ const FOOTER_LINKS = [
 export function Footer({
     links = FOOTER_LINKS,
     copyright = "© 2026 Skillpath. All rights reserved.",
-    accentColor = ACCENT,
+    textColor = theme.text,
+    descriptionColor = theme.muted,
     paddingY = 36,
     paddingX = 24,
     style,
@@ -466,7 +490,8 @@ export function Footer({
         <footer
             style={{
                 ...style,
-                "--sp-accent": accentColor,
+                ...textVars(textColor, descriptionColor),
+                "--sp-accent": ACCENT,
                 padding: `${clamp(paddingY, 0, 160, 36)}px ${clamp(paddingX, 0, 120, 24)}px`,
                 background: theme.background,
                 borderTop: `1px solid ${theme.border}`,
@@ -493,7 +518,7 @@ export function Footer({
                             className="sp-focusable"
                             style={{
                                 fontSize: 14,
-                                color: theme.muted,
+                                color: "var(--sp-text)",
                                 textDecoration: "none",
                             }}
                         >
@@ -502,7 +527,9 @@ export function Footer({
                     ))}
                 </nav>
 
-                <span style={{ fontSize: 13, color: theme.muted }}>{copyright}</span>
+                <span style={{ fontSize: 13, color: "var(--sp-muted)" }}>
+                    {copyright}
+                </span>
             </div>
 
             <StyleSheet />
@@ -529,12 +556,7 @@ addPropertyControls(Footer, {
         title: "Copyright",
         defaultValue: "© 2026 Skillpath. All rights reserved.",
     },
-    accentColor: {
-        type: ControlType.Color,
-        title: "Accent",
-        defaultValue: ACCENT,
-        description: "Focus rings. Bind all three sections to one Color Style.",
-    },
+    ...COLOUR_CONTROLS,
     paddingY: {
         type: ControlType.Number,
         title: "Padding Y",

@@ -16,6 +16,12 @@ const useIsomorphicLayoutEffect =
 const TABLET_MIN_WIDTH = 640
 const DESKTOP_MIN_WIDTH = 960
 
+// The counts the brief specifies. Fixed, not properties: "3 columns on
+// desktop. 2 on tablet. 1 on mobile" is a requirement, not a preference.
+const DESKTOP_COLUMNS = 3
+const TABLET_COLUMNS = 2
+const MOBILE_COLUMNS = 1
+
 /** Fallback currency when the country lookup can't tell us. */
 const FALLBACK_COUNTRY = "IN"
 
@@ -25,10 +31,13 @@ const FALLBACK_COUNTRY = "IN"
  * Inside Framer the component renders in a frame on the canvas, so a viewport
  * media query reports the browser window and returns the wrong count. A
  * ResizeObserver on our own node is right on the canvas and on the published
- * site. 3 / 2 / 1 as the brief specifies.
+ * site. 3 / 2 / 1 exactly as the brief specifies.
+ *
+ * The card count varies between 5 and 10, so the grid never assumes a round
+ * number — a short last row simply leaves the trailing tracks empty.
  */
 export function useColumns(ref) {
-    const [columns, setColumns] = useState(3)
+    const [columns, setColumns] = useState(DESKTOP_COLUMNS)
 
     useIsomorphicLayoutEffect(() => {
         const node = ref.current
@@ -36,7 +45,11 @@ export function useColumns(ref) {
 
         const measure = (width) =>
             setColumns(
-                width >= DESKTOP_MIN_WIDTH ? 3 : width >= TABLET_MIN_WIDTH ? 2 : 1
+                width >= DESKTOP_MIN_WIDTH
+                    ? DESKTOP_COLUMNS
+                    : width >= TABLET_MIN_WIDTH
+                      ? TABLET_COLUMNS
+                      : MOBILE_COLUMNS
             )
 
         // Measure once before the browser paints. Waiting for the observer's
