@@ -14,7 +14,11 @@ import { addPropertyControls, ControlType } from "framer"
 import { useMemo, useRef, useState } from "react"
 
 import { ACCENT, contrastText, theme, tint, visuallyHidden } from "./Tokens.tsx"
-import { selectCourses } from "./Format.tsx"
+import {
+    EXTRA_FIELD_KEYS,
+    EXTRA_FIELD_TITLES,
+    selectCourses,
+} from "./Format.tsx"
 import { useColumns, useCourses } from "./Hooks.tsx"
 import {
     CourseGrid,
@@ -250,6 +254,11 @@ export function Courses({
     sectionTitle = "Courses",
     textColor = theme.text,
     descriptionColor = theme.muted,
+    extraField = "category",
+    showRefundable = true,
+    pillColor = ACCENT,
+    refundableColor = theme.positive,
+    pillRadius = 20,
     gap = 20,
     cardRadius = 16,
     cardPadding = 22,
@@ -283,6 +292,11 @@ export function Courses({
     const card = {
         radius: clamp(cardRadius, 0, 32, 16),
         padding: clamp(cardPadding, 8, 48, 22),
+        extraField,
+        showRefundable,
+        pillColor,
+        refundableColor,
+        pillRadius: clamp(pillRadius, 0, 20, 20),
     }
     const gridGap = clamp(gap, 0, 48, 20)
 
@@ -413,6 +427,42 @@ addPropertyControls(Courses, {
         defaultValue: "Courses",
     },
     ...COLOUR_CONTROLS,
+    extraField: {
+        type: ControlType.Enum,
+        title: "Extra field",
+        options: EXTRA_FIELD_KEYS,
+        optionTitles: EXTRA_FIELD_TITLES,
+        defaultValue: "category",
+        description: "Which payload field rides on the card as a chip.",
+    },
+    showRefundable: {
+        type: ControlType.Boolean,
+        title: "Refundable",
+        defaultValue: true,
+        description: "Only ever shows on courses whose payload says true.",
+    },
+    pillColor: {
+        type: ControlType.Color,
+        title: "Pill",
+        defaultValue: ACCENT,
+        description:
+            "The category chip. Its label drops to body text if the colour is too dark to read on itself.",
+    },
+    refundableColor: {
+        type: ControlType.Color,
+        title: "Refundable pill",
+        defaultValue: theme.positive,
+    },
+    pillRadius: {
+        type: ControlType.Number,
+        title: "Pill radius",
+        min: 0,
+        max: 20,
+        step: 1,
+        unit: "px",
+        defaultValue: 20,
+        description: "20 is a full pill, 0 is square.",
+    },
     gap: {
         type: ControlType.Number,
         title: "Grid gap",

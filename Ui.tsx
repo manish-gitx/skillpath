@@ -12,11 +12,12 @@ import {
     GLOBAL_CSS,
     MUTED_VAR,
     TEXT_VAR,
+    contrastRatio,
     contrastText,
     theme,
     tint,
 } from "./Tokens.tsx"
-import { formatPrice } from "./Format.tsx"
+import { extraFieldValue, formatPrice } from "./Format.tsx"
 
 /** One <style> tag carrying the rules inline styles can't express. */
 export function StyleSheet() {
@@ -25,17 +26,24 @@ export function StyleSheet() {
 
 /* ---------------------------------- atoms ---------------------------------- */
 
-function Chip({ label, color }) {
+function Chip({ label, color, radius }) {
     return (
         <span
             style={{
                 fontSize: 12,
                 fontWeight: 500,
                 lineHeight: 1.4,
-                color,
+                // The label sits on a 12% tint of its own colour over the card
+                // surface. A dark pill colour can't legibly be its own label,
+                // so below the 4.5:1 minimum for small text it falls back to
+                // body text rather than printing something unreadable.
+                color:
+                    contrastRatio(color, theme.surface) >= 4.5 ? color : TEXT_VAR,
                 background: tint(color, 0.12),
                 border: `1px solid ${tint(color, 0.28)}`,
-                borderRadius: 999,
+                // CSS clamps a radius to half the box, so 20 renders as a
+                // full pill on a ~27px chip and 0 gives square corners.
+                borderRadius: radius,
                 padding: "4px 10px",
                 whiteSpace: "nowrap",
             }}
@@ -115,6 +123,11 @@ export function Toolbar({ query, onQuery, sortOrder, onSort, disabled }) {
 /* ----------------------------------- card ---------------------------------- */
 
 function CourseCard({ course, country, priceReady, card }) {
+    const extra = extraFieldValue(course, card.extraField)
+    // The badge only ever appears when the payload actually says true — the
+    // toggle can hide it, never invent it.
+    const showRefundable = card.showRefundable && course.refundable === true
+
     return (
         <article
             className="sp-card"
@@ -134,22 +147,33 @@ function CourseCard({ course, country, priceReady, card }) {
                 minWidth: 0,
             }}
         >
-            <div
-                style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 8,
-                    alignItems: "center",
-                }}
-            >
-                {/* The extra field the brief asks for. Category is the one a
-                    learner actually scans for; courseCode and mangoId are
-                    internal identifiers and deliberately absent. */}
-                <Chip label={course.mainCategory || "Course"} color={ACCENT} />
-                {course.refundable === true && (
-                    <Chip label="Refundable" color={theme.positive} />
-                )}
-            </div>
+            {/* Skip the row entirely when both chips are off, or the gap
+                above the title would double up. */}
+            {extra || showRefundable ? (
+                <div
+                    style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                        alignItems: "center",
+                    }}
+                >
+                    {extra ? (
+                        <Chip
+                            label={extra}
+                            color={card.pillColor}
+                            radius={card.pillRadius}
+                        />
+                    ) : null}
+                    {showRefundable ? (
+                        <Chip
+                            label="Refundable"
+                            color={card.refundableColor}
+                            radius={card.pillRadius}
+                        />
+                    ) : null}
+                </div>
+            ) : null}
 
             <h3
                 style={{

@@ -70,3 +70,34 @@ export function selectCourses(courses, { query, sortOrder, country }) {
 
     return list
 }
+
+/* ------------------------------- extra field ------------------------------- */
+
+/**
+ * Which payload field rides on the card as a chip, offered as a menu.
+ *
+ * courseCode and mangoId are deliberately absent: no learner scans for a slug
+ * or a database id, so putting them in the menu would only invite a bad
+ * choice. Category is the default because it is what someone browsing a
+ * catalogue actually sorts the world by.
+ */
+export const EXTRA_FIELDS = {
+    category: { title: "Category", key: "mainCategory" },
+    type: { title: "Course type", key: "courseType" },
+    topic: { title: "Short name", key: "shortCourse" },
+    none: { title: "None", key: null },
+}
+
+export const EXTRA_FIELD_KEYS = Object.keys(EXTRA_FIELDS)
+
+export const EXTRA_FIELD_TITLES = EXTRA_FIELD_KEYS.map(
+    (key) => EXTRA_FIELDS[key].title
+)
+
+/** The chosen field's value, or "" when it is missing or set to None. */
+export function extraFieldValue(course, choice) {
+    const field = EXTRA_FIELDS[choice] || EXTRA_FIELDS.category
+    if (!field.key) return ""
+    const value = course[field.key]
+    return typeof value === "string" ? value : ""
+}

@@ -101,7 +101,7 @@ function luminance(color) {
 }
 
 /** Contrast ratio between two colours, 1 (identical) to 21 (black on white). */
-function contrastRatio(a, b) {
+export function contrastRatio(a, b) {
     const light = Math.max(luminance(a), luminance(b))
     const dark = Math.min(luminance(a), luminance(b))
     return (light + 0.05) / (dark + 0.05)
