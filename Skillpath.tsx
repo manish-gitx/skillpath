@@ -13,7 +13,7 @@
 import { addPropertyControls, ControlType } from "framer"
 import { useMemo, useRef, useState } from "react"
 
-import { ACCENT, contrastText, theme, tint, visuallyHidden } from "./Tokens.tsx"
+import { ACCENT, theme, tint, visuallyHidden } from "./Tokens.tsx"
 import {
     EXTRA_FIELD_KEYS,
     EXTRA_FIELD_TITLES,
@@ -82,6 +82,10 @@ export function Hero({
     buttonLink = "#courses",
     textColor = theme.text,
     descriptionColor = theme.muted,
+    accentColor = ACCENT,
+    badgeTextColor = ACCENT,
+    badgeRadius = 20,
+    buttonTextColor = theme.ink,
     buttonRadius = 12,
     paddingY = 112,
     paddingX = 24,
@@ -92,8 +96,9 @@ export function Hero({
             style={{
                 ...style,
                 ...textVars(textColor, descriptionColor),
-                // Read by .sp-focusable in the shared stylesheet.
-                "--sp-accent": ACCENT,
+                // Read by .sp-focusable in the shared stylesheet, so the
+                // focus ring follows the accent a designer picks.
+                "--sp-accent": accentColor,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -102,7 +107,7 @@ export function Hero({
                 padding: `${clamp(paddingY, 0, 240, 112)}px ${clamp(paddingX, 0, 120, 24)}px`,
                 background: theme.background,
                 backgroundImage: `radial-gradient(60% 80% at 50% 0%, ${tint(
-                    ACCENT,
+                    accentColor,
                     0.22
                 )} 0%, rgba(0,0,0,0) 70%)`,
                 fontFamily: theme.font,
@@ -116,10 +121,12 @@ export function Hero({
                         fontSize: 13,
                         fontWeight: 500,
                         letterSpacing: 0.4,
-                        color: ACCENT,
-                        border: `1px solid ${tint(ACCENT, 0.35)}`,
-                        background: tint(ACCENT, 0.1),
-                        borderRadius: 999,
+                        color: badgeTextColor,
+                        border: `1px solid ${tint(accentColor, 0.35)}`,
+                        background: tint(accentColor, 0.1),
+                        // CSS clamps a radius to half the box, so 20 is a
+                        // full pill on a ~27px badge and 0 is square.
+                        borderRadius: clamp(badgeRadius, 0, 20, 20),
                         padding: "6px 14px",
                     }}
                 >
@@ -163,8 +170,8 @@ export function Hero({
                     gap: 8,
                     padding: "14px 26px",
                     borderRadius: clamp(buttonRadius, 0, 32, 12),
-                    background: ACCENT,
-                    color: contrastText(ACCENT),
+                    background: accentColor,
+                    color: buttonTextColor,
                     fontSize: 15,
                     fontWeight: 600,
                     textDecoration: "none",
@@ -210,6 +217,32 @@ addPropertyControls(Hero, {
         description: "`#courses` scrolls down to the Courses section.",
     },
     ...COLOUR_CONTROLS,
+    accentColor: {
+        type: ControlType.Color,
+        title: "Accent",
+        defaultValue: ACCENT,
+        description: "Button fill, badge tint, glow and focus ring.",
+    },
+    badgeTextColor: {
+        type: ControlType.Color,
+        title: "Badge text",
+        defaultValue: ACCENT,
+    },
+    badgeRadius: {
+        type: ControlType.Number,
+        title: "Badge radius",
+        min: 0,
+        max: 20,
+        step: 1,
+        unit: "px",
+        defaultValue: 20,
+        description: "20 is a full pill, 0 is square.",
+    },
+    buttonTextColor: {
+        type: ControlType.Color,
+        title: "Button text",
+        defaultValue: theme.ink,
+    },
     buttonRadius: {
         type: ControlType.Number,
         title: "Button radius",
