@@ -16,9 +16,10 @@ const COUNTRY_URL = `${BASE_URL}/assignment/country-code`
 const MAX_ATTEMPTS = 2
 const RETRY_BASE_MS = 400
 
-// This API is on a free tier that cold-starts. A socket that opens and then
-// hangs would otherwise leave the skeletons up forever, so every attempt gets
-// its own deadline. A timeout is retried like any other failure.
+// fetch has no timeout of its own: a socket that opens and then never answers
+// leaves the skeletons up forever, which is the one failure the error state
+// can't rescue. Every attempt gets its own deadline, and a timeout is retried
+// like any other failure.
 const TIMEOUT_MS = 8000
 
 /**
@@ -26,10 +27,13 @@ const TIMEOUT_MS = 8000
  * [0, BASE * 2^(n-1)].
  *
  * At MAX_ATTEMPTS = 2 there is exactly one wait, so the exponent buys nothing
- * today — it only matters if the budget is ever raised. The jitter does earn
- * its keep now: this API is on a free tier that cold-starts, and a cold start
- * releases every waiting visitor at the same instant. A fixed delay would send
- * them all back in lockstep; a random one spreads them out.
+ * today — it only matters if the budget is ever raised.
+ *
+ * The jitter earns a little now. Each page load fires two requests at once,
+ * and at a 1-in-3 failure rate both miss about one time in nine. A fixed delay
+ * would then retry both at the same instant, aiming the same burst at the same
+ * server twice; a random one spreads our own pair out. That is a small effect
+ * on two requests, and it is the honest size of it.
  */
 function backoffDelay(attempt) {
     return Math.random() * RETRY_BASE_MS * Math.pow(2, attempt - 1)
